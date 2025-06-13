@@ -1,0 +1,186 @@
+{% extends "base.html" %} {% block content %} {% if zonas|length == 0 %}
+<dialog open="">
+  <article>
+    <header>
+      <h6>🍱 No hay elementos!!!</h6>
+    </header>
+    <p>
+      Parece que no hay <b>zonas</b> disponibles 😬. Vuelva a la administración
+      de zonas para crear algunas
+    </p>
+    <footer>
+      <a role="button" href="{{ url_for('zonas') }}">Volver</a>
+    </footer>
+  </article>
+</dialog>
+{% else %}
+<div>
+  <header>
+    <h2>Adminitración de Barrios</h2>
+    <p>
+      Lorem ipsum dolor sit amet consectetur adipisicing elit. Error quos
+      eveniet qui, unde cumque, maiores, dolorum dolorem quo repudiandae iure
+      alias doloremque consequatur labore est sed voluptas pariatur velit
+      ratione.
+    </p>
+    <div>
+      <button
+        data-action="{{ url_for('create_barrio') }}"
+        data-method="POST"
+        data-codigo="Auto generado"
+        data-zona="default"
+        onclick="createEditAction(event)"
+      >
+        Agregar nuevo
+      </button>
+    </div>
+  </header>
+  {% if barrios|length == 0 %}
+  <article class="ups">
+    <h1>🤥</h1>
+    <h5>¿Ups?</h5>
+    <p>
+      Parece que no hay elementos de este tipo, porfavor
+      <ins>cree algunos</ins> para poder mostrarlos en esta página
+    </p>
+  </article>
+  {% else %}
+  <table class="striped pico-background-zinc-50">
+    <thead>
+      <tr>
+        <th>Código del barrio</th>
+        <th>Zona</th>
+        <th>Nombre del barrio</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for barrio in barrios %}
+      <tr>
+        <td>{{ barrio[0] }}</td>
+        <td>{{ barrio[4] }}</td>
+        <td>{{ barrio[1] }}</td>
+        <td style="display: flex; gap: 0.5rem">
+          <button
+            class="contrast"
+            data-action="{{ url_for('edit_barrio', id=barrio[0]) }}"
+            data-method="POST"
+            data-codigo="{{ barrio[0] }}"
+            data-nombre="{{ barrio[1] }}"
+            data-zona="{{ barrio[2] }}"
+            onclick="createEditAction(event)"
+          >
+            Editar
+          </button>
+          <button
+            class="secondary"
+            data-action="{{ url_for('delete_barrio', id=barrio[0]) }}"
+            data-msg="{{ barrio[1] }}"
+            onclick="deleteAction(event)"
+          >
+            Eliminar
+          </button>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% endif %}
+</div>
+<div class="hidden">
+  <form id="create-edit">
+    <fieldset>
+      <label>
+        Código del barrio
+        <input id="codigo_barrio" name="codigo_barrio" disabled required />
+      </label>
+      <label>
+        Nombre del barrio
+        <input
+          type="text"
+          id="nombre_barrio"
+          name="nombre_barrio"
+          placeholder="Ej. Cotahuma Central"
+          required
+        />
+      </label>
+      <label>
+        Zona al que pertenece
+        <select id="codigo_zona" name="codigo_zona" required>
+          <option value="default" disabled>Seleccione una zona</option>
+          {% for zona in zonas %}
+          <option value="{{ zona[0] }}">{{ zona[1] }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    </fieldset>
+  </form>
+  <form id="delete">
+    ¿Seguro que quieres eliminar el barrio
+    <b><span id="delete-msg"></span></b>? Esto eliminará todas las calles
+    asociados a él.
+  </form>
+</div>
+<script defer>
+  function createEditAction(event) {
+    event.preventDefault();
+    toggleModal();
+    // get modal for remplace
+    const modalBody = document.getElementById("modal-body");
+    if (!modalBody) return;
+    const template = document.getElementById("create-edit");
+    if (!template) return;
+    const action = event.currentTarget.dataset.action;
+    const method = event.currentTarget.dataset.method ?? "GET";
+    if (!action) return;
+    // create clone of template
+    const target = template.cloneNode(true);
+    target.id = "form";
+    target.action = action;
+    target.method = method;
+    modalBody.innerHTML = target.outerHTML;
+
+    // get inputs of #form for remplace value
+    const codigoInput = modalBody.querySelector("#codigo_barrio");
+    const nombreInput = modalBody.querySelector("#nombre_barrio");
+    const zonaInput = modalBody.querySelector("#codigo_zona");
+    if (!codigoInput || !nombreInput || !zonaInput) return;
+
+    // get dataset for remplace
+    const codigo = event.currentTarget.dataset.codigo ?? "";
+    const nombre = event.currentTarget.dataset.nombre ?? "";
+    const zona = event.currentTarget.dataset.zona ?? "";
+
+    codigoInput.value = codigo;
+    nombreInput.value = nombre;
+    const options = zonaInput.querySelectorAll("option");
+    options.forEach((opt) => {
+      if (opt.value === zona) {
+        opt.selected = true;
+      }
+    });
+  }
+
+  function deleteAction(event) {
+    event.preventDefault();
+    toggleModal();
+    const modalBody = document.getElementById("modal-body");
+    if (!modalBody) return;
+    const template = document.getElementById("delete");
+    if (!template) return;
+    const msgSlot = document.getElementById("delete-msg");
+    if (!msgSlot) return;
+    const action = event.currentTarget.dataset.action;
+    const method = event.currentTarget.dataset.method ?? "GET";
+    const msg = event.currentTarget.dataset.msg;
+    if (!action) return;
+
+    msgSlot.innerHTML = msg;
+    const target = template.cloneNode(true);
+    target.id = "form";
+    target.action = action;
+    target.method = method;
+    modalBody.innerHTML = target.outerHTML;
+  }
+</script>
+{% endif %} {% endblock %}
